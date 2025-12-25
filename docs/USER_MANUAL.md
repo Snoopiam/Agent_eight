@@ -379,7 +379,11 @@ These patterns are configured in `backend/src/watcher.ts`.
 
 ### Current Rules
 
-#### Password Detection Rule
+Agent Eight includes 5 security scanning rules out of the box:
+
+---
+
+#### 1. Password Detection Rule
 
 **ID**: `password-detection`  
 **Severity**: CRITICAL  
@@ -393,6 +397,78 @@ These patterns are configured in `backend/src/watcher.ts`.
 - `secret = "value"`
 
 **Fix Applied**: Replaces the password value with `********`
+
+---
+
+#### 2. API Key Detection Rule
+
+**ID**: `api-key-detection`  
+**Severity**: CRITICAL  
+**Description**: Detects exposed API keys from popular services
+
+**Services Detected**:
+| Service | Pattern Example |
+|---------|-----------------|
+| AWS Access Key | `AKIA...` (20 chars) |
+| OpenAI | `sk-...` (48+ chars) |
+| Stripe | `sk_live_...`, `pk_live_...` |
+| GitHub | `ghp_...`, `gho_...`, `ghu_...` |
+| Google | `AIza...` (39 chars) |
+| Slack | `xoxb-...`, `xoxp-...` |
+| Discord | Bot tokens |
+| Twilio | `SK...` (32 chars) |
+| SendGrid | `SG....` |
+| Mailchimp | `...-us##` |
+| npm | `npm_...` |
+
+**Fix Applied**: Replaces with `process.env.SERVICE_API_KEY`
+
+---
+
+#### 3. Private Key Detection Rule
+
+**ID**: `private-key-detection`  
+**Severity**: CRITICAL  
+**Description**: Detects private keys committed to source code
+
+**Patterns Detected**:
+- `-----BEGIN RSA PRIVATE KEY-----`
+- `-----BEGIN DSA PRIVATE KEY-----`
+- `-----BEGIN EC PRIVATE KEY-----`
+- `-----BEGIN OPENSSH PRIVATE KEY-----`
+- `-----BEGIN PGP PRIVATE KEY BLOCK-----`
+- `-----BEGIN PRIVATE KEY-----`
+- `-----BEGIN ENCRYPTED PRIVATE KEY-----`
+
+**Fix Applied**: Replaces key block with removal comment
+
+---
+
+#### 4. JWT Token Detection Rule
+
+**ID**: `jwt-token-detection`  
+**Severity**: HIGH  
+**Description**: Detects hardcoded JWT tokens
+
+**Pattern**: `eyJ...` (Base64-encoded JSON Web Tokens)
+
+**Fix Applied**: Replaces with `process.env.JWT_TOKEN`
+
+---
+
+#### 5. Database Connection String Detection Rule
+
+**ID**: `database-connection-detection`  
+**Severity**: CRITICAL  
+**Description**: Detects hardcoded database connection strings with credentials
+
+**Patterns Detected**:
+- MongoDB: `mongodb://user:pass@host/db`
+- PostgreSQL: `postgres://user:pass@host/db`
+- MySQL: `mysql://user:pass@host/db`
+- Redis: `redis://:pass@host`
+
+**Fix Applied**: Replaces with appropriate `process.env.DATABASE_URL`
 
 ### Adding Custom Rules
 
