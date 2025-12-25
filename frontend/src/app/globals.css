@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #131920;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2d3848;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3d4858;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(0, 255, 159, 0.3);
+  color: #fff;
+}
+
+/* Custom utilities */
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  }
+  
+  .border-glow {
+    box-shadow: 0 0 10px rgba(0, 255, 159, 0.2), inset 0 0 10px rgba(0, 255, 159, 0.05);
+  }
+  
+  .gradient-border {
+    border: 1px solid transparent;
+    background: linear-gradient(#131920, #131920) padding-box,
+                linear-gradient(135deg, #00ff9f 0%, #4d96ff 100%) border-box;
+  }
+}
+
+/* Diff viewer overrides for dark theme */
+.diff-viewer {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, opacity, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+/* Prevent transition on page load */
+.no-transition * {
+  transition: none !important;
+}
+

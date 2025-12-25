@@ -1,0 +1,145 @@
+# Agent Eight - Cursor AI Context
+
+## Project Overview
+
+Agent Eight is a **local-first development sidecar application** consisting of two main components:
+
+1. **The Engine (Backend)**: Node.js + Express + Socket.io + Chokidar
+   - Location: `backend/`
+   - Port: 3001
+   - Responsibilities: File watching, code scanning, fix application
+
+2. **The Cockpit (Frontend)**: Next.js + Tailwind CSS + React-Diff-Viewer
+   - Location: `frontend/`
+   - Port: 3000
+   - Responsibilities: Real-time alert display, diff visualization, user interactions
+
+3. **Shared Types**: TypeScript interfaces shared between both components
+   - Location: `shared/types.ts`
+   - Contains: `Alert`, `ScanResult`, `FixPayload`, `IScannerRule` types
+
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         FILE SYSTEM                             │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ Chokidar watch events
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    THE ENGINE (Backend)                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │   Watcher    │→ │   Scanner    │→ │    Fixer     │          │
+│  │  (Chokidar)  │  │  (Rules)     │  │  (File I/O)  │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│         │                 │                 ▲                   │
+│         └─────────────────┼─────────────────┘                   │
+│                           │                                     │
+│                    Socket.io Server                             │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ WebSocket (scan:result, fix:apply)
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   THE COCKPIT (Frontend)                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │  Dashboard   │→ │  AlertFeed   │→ │ AlertDetail  │          │
+│  │              │  │              │  │ (DiffViewer) │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Key Files
+
+### Backend (The Engine)
+- `backend/src/index.ts` - Main server entry point, Express + Socket.io setup
+- `backend/src/watcher.ts` - Chokidar file watcher with 500ms debounce
+- `backend/src/services/scanner.ts` - Pluggable scanner with IScannerRule interface
+- `backend/src/services/fixer.ts` - File remediation with defensive error handling
+
+### Frontend (The Cockpit)
+- `frontend/src/app/page.tsx` - Dashboard entry point
+- `frontend/src/components/Dashboard.tsx` - Main layout component
+- `frontend/src/components/AlertFeed.tsx` - Scrollable alert list
+- `frontend/src/components/AlertDetail.tsx` - Diff viewer + Fix button
+- `frontend/src/hooks/useSocket.ts` - Socket.io connection hook
+- `frontend/src/lib/socket.ts` - Socket.io client singleton
+
+### Shared
+- `shared/types.ts` - TypeScript interfaces used by both frontend and backend
+
+## Coding Standards
+
+### TypeScript Strict Mode
+- Always use TypeScript strict mode (`"strict": true`)
+- Avoid `any` types - use proper typing or `unknown` with type guards
+- Define interfaces for all data structures in `shared/types.ts`
+
+### Defensive Error Handling
+- Wrap all file I/O operations in try/catch blocks
+- Handle file-not-found (ENOENT) and permission (EACCES/EPERM) errors gracefully
+- Never let unhandled exceptions crash the server
+- Log errors with context using structured format: `[Module] Message`
+
+### Socket.io Event Types
+- Use typed Socket.io events defined in `shared/types.ts`:
+  - `ServerToClientEvents` - Events sent from backend to frontend
+  - `ClientToServerEvents` - Events sent from frontend to backend
+
+### Scanner Rules
+- All scanning rules must implement `IScannerRule` interface
+- Rules are pluggable - register new rules via `scannerService.registerRule()`
+- Return standardized `Alert` objects with full context
+
+### Component Patterns
+- Use React hooks for state management
+- Socket connection managed via `useSocket` hook
+- Components use Tailwind CSS with custom `agent-*` color palette
+
+## Adding New Scanner Rules
+
+To add a new scanning rule (e.g., API key detection):
+
+```typescript
+// backend/src/services/scanner.ts
+import type { IScannerRule, Alert } from '../types.js';
+
+export class ApiKeyDetectionRule implements IScannerRule {
+  id = 'api-key-detection';
+  name = 'API Key Detection';
+  severity: Severity = 'high';
+  description = 'Detects potential hardcoded API keys';
+
+  scan(content: string, filePath: string): Alert[] {
+    // Implementation here
+    return [];
+  }
+}
+
+// Register in ScannerService constructor:
+this.registerRule(new ApiKeyDetectionRule());
+```
+
+## Environment Variables
+
+### Backend
+- `PORT` - Server port (default: 3001)
+- `WATCH_DIR` - Directory to watch (default: current directory)
+- `FRONTEND_URL` - CORS origin (default: http://localhost:3000)
+
+### Frontend
+- `NEXT_PUBLIC_SOCKET_URL` - Backend URL (default: http://localhost:3001)
+
+## Running the Project
+
+```bash
+# Install all dependencies
+npm run install:all
+
+# Run both servers concurrently (from root)
+npm run dev
+
+# Or run separately:
+cd backend && npm run dev   # Terminal 1
+cd frontend && npm run dev  # Terminal 2
+```
+

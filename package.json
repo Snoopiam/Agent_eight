@@ -1,0 +1,20 @@
+{
+  "name": "agent-eight",
+  "version": "1.0.0",
+  "description": "Agent Eight - Local-First Development Sidecar Application",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n engine,cockpit -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "typecheck": "cd backend && npm run typecheck && cd ../frontend && npm run typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
