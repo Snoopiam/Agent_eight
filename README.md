@@ -1,13 +1,13 @@
 # Agent Eight
 
-> Local-First Development Sidecar Application
+> Local-First Security Scanner for Developers
 
-Agent Eight is a real-time code analysis tool that watches your files for security issues and helps you fix them instantly.
+Agent Eight is a real-time code analysis tool that watches your files for security vulnerabilities and helps you fix them instantly. **11 detection rules** catch secrets, injection attacks, and insecure patterns before they reach production.
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║
-║     🚀 AGENT EIGHT                                           ║
+║     🚀 AGENT EIGHT v1.1                                      ║
 ║                                                              ║
 ║     The Engine (Backend)  ←→  The Cockpit (Frontend)        ║
 ║                                                              ║
@@ -17,10 +17,19 @@ Agent Eight is a real-time code analysis tool that watches your files for securi
 ## Features
 
 - **Real-time File Watching**: Monitors your project files with 500ms debounced scanning
-- **Security Scanning**: Detects hardcoded passwords and secrets (MVP: password detection)
+- **11 Security Rules**: Passwords, API keys, injection attacks, weak crypto, and more
 - **Visual Diff Review**: Side-by-side comparison of current vs. proposed fixes
 - **One-Click Fixes**: Apply security fixes directly from the dashboard
+- **Context Awareness**: Smart filtering for test files and example configs
 - **Pluggable Architecture**: Easy to add new scanning rules
+
+## What It Detects
+
+| Severity | Rules |
+|----------|-------|
+| 🔴 **CRITICAL** | Passwords, API Keys (12 services), Private Keys, Database URLs, `eval()`, Command Injection |
+| 🟠 **HIGH** | JWT Tokens, CORS Wildcards, Weak Crypto (MD5/SHA1) |
+| 🟡 **MEDIUM** | Console.log Secrets, Commented Secrets |
 
 ## Architecture
 

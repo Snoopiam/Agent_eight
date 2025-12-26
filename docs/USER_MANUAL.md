@@ -379,96 +379,78 @@ These patterns are configured in `backend/src/watcher.ts`.
 
 ### Current Rules
 
-Agent Eight includes 5 security scanning rules out of the box:
+Agent Eight includes **11 security scanning rules** organized by severity:
 
 ---
+
+### 🔴 CRITICAL Severity
 
 #### 1. Password Detection Rule
-
 **ID**: `password-detection`  
-**Severity**: CRITICAL  
-**Description**: Detects hardcoded passwords in source code
-
-**Patterns Detected**:
-- `password = "value"`
-- `password: "value"`
-- `pwd = "value"`
-- `passwd = "value"`
-- `secret = "value"`
-
-**Fix Applied**: Replaces the password value with `********`
-
----
+Detects hardcoded passwords: `password = "value"`, `secret = "value"`, etc.
 
 #### 2. API Key Detection Rule
-
 **ID**: `api-key-detection`  
-**Severity**: CRITICAL  
-**Description**: Detects exposed API keys from popular services
-
-**Services Detected**:
-| Service | Pattern Example |
-|---------|-----------------|
-| AWS Access Key | `AKIA...` (20 chars) |
-| OpenAI | `sk-...` (48+ chars) |
-| Stripe | `sk_live_...`, `pk_live_...` |
-| GitHub | `ghp_...`, `gho_...`, `ghu_...` |
-| Google | `AIza...` (39 chars) |
-| Slack | `xoxb-...`, `xoxp-...` |
-| Discord | Bot tokens |
-| Twilio | `SK...` (32 chars) |
-| SendGrid | `SG....` |
-| Mailchimp | `...-us##` |
-| npm | `npm_...` |
-
-**Fix Applied**: Replaces with `process.env.SERVICE_API_KEY`
-
----
+Detects 12+ services: AWS, OpenAI, Stripe, GitHub, Google, Slack, Discord, Twilio, SendGrid, Mailchimp, npm
 
 #### 3. Private Key Detection Rule
-
 **ID**: `private-key-detection`  
-**Severity**: CRITICAL  
-**Description**: Detects private keys committed to source code
+Detects: RSA, DSA, EC, OpenSSH, PGP private keys (`-----BEGIN RSA PRIVATE KEY-----`)
 
-**Patterns Detected**:
-- `-----BEGIN RSA PRIVATE KEY-----`
-- `-----BEGIN DSA PRIVATE KEY-----`
-- `-----BEGIN EC PRIVATE KEY-----`
-- `-----BEGIN OPENSSH PRIVATE KEY-----`
-- `-----BEGIN PGP PRIVATE KEY BLOCK-----`
-- `-----BEGIN PRIVATE KEY-----`
-- `-----BEGIN ENCRYPTED PRIVATE KEY-----`
-
-**Fix Applied**: Replaces key block with removal comment
-
----
-
-#### 4. JWT Token Detection Rule
-
-**ID**: `jwt-token-detection`  
-**Severity**: HIGH  
-**Description**: Detects hardcoded JWT tokens
-
-**Pattern**: `eyJ...` (Base64-encoded JSON Web Tokens)
-
-**Fix Applied**: Replaces with `process.env.JWT_TOKEN`
-
----
-
-#### 5. Database Connection String Detection Rule
-
+#### 4. Database Connection String Detection
 **ID**: `database-connection-detection`  
-**Severity**: CRITICAL  
-**Description**: Detects hardcoded database connection strings with credentials
+Detects: MongoDB, PostgreSQL, MySQL, Redis connection strings with credentials
 
-**Patterns Detected**:
-- MongoDB: `mongodb://user:pass@host/db`
-- PostgreSQL: `postgres://user:pass@host/db`
-- MySQL: `mysql://user:pass@host/db`
-- Redis: `redis://:pass@host`
+#### 5. Eval/new Function() Detection *(V1.1)*
+**ID**: `eval-detection`  
+Detects dangerous code execution: `eval()`, `new Function()`, `setTimeout("string")`
 
-**Fix Applied**: Replaces with appropriate `process.env.DATABASE_URL`
+#### 6. Command Injection Detection *(V1.1)*
+**ID**: `command-injection-detection`  
+Detects: `exec()` with string concatenation, `shell: true`, user input in commands
+
+---
+
+### 🟠 HIGH Severity
+
+#### 7. JWT Token Detection
+**ID**: `jwt-token-detection`  
+Detects hardcoded JWT tokens: `eyJhbGciOiJIUzI1NiIs...`
+
+#### 8. CORS Wildcard Detection *(V1.1)*
+**ID**: `cors-wildcard-detection`  
+Detects: `Access-Control-Allow-Origin: *`, `cors({ origin: '*' })`
+
+#### 9. Weak Cryptography Detection *(V1.1)*
+**ID**: `weak-crypto-detection`  
+Detects: MD5, SHA1, DES, RC4, ECB mode usage
+
+---
+
+### 🟡 MEDIUM Severity
+
+#### 10. Console.log Secrets Detection *(V1.1)*
+**ID**: `console-secrets-detection`  
+Detects: `console.log(password)`, `console.log(token)`, etc.
+
+#### 11. Commented Secrets Detection *(V1.1)*
+**ID**: `commented-secrets-detection`  
+Detects: `// password = "old_password"`, secrets hiding in comments
+
+---
+
+### Context Awareness
+
+Agent Eight automatically skips:
+- `.env.example`, `.env.sample`, `.env.template` files
+- Binary files (images, fonts, archives)
+- Lock files and source maps
+
+Test files are detected but may have reduced priority:
+- `/test/`, `/__tests__/`, `/spec/`, `/fixtures/`, `/mocks/`
+- Files ending in `.test.ts`, `.spec.js`, etc.
+
+---
 
 ### Adding Custom Rules
 
